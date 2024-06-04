@@ -1,5 +1,3 @@
-from google.colab import drive
-drive.mount('/content/drive')
 import pathlib
 import numpy as np
 import random
