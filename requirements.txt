@@ -1,4 +1,5 @@
 Flask==2.2.2
+gunicorn==22.0.0
 keras==3.3.3
 numpy==1.24.3
 tensorflow==2.16.1
