@@ -13,6 +13,11 @@ from keras.preprocessing import image
 from flask import Flask, redirect, url_for, request, render_template
 from werkzeug.utils import secure_filename
 
+
+
+
+
+
 # Define a flask app
 app = Flask(__name__)
 
@@ -23,7 +28,9 @@ MODEL_PATH = 'cnn-model.h5'
 model = load_model(MODEL_PATH)
 # print('Model loaded. Start serving...')
 
+preds = ['MildDemented' ,'ModerateDemented', 'NonDemented', 'VeryMildDemented']
 
+app.config['UPLOAD_FOLDER'] = 'uploads'
 #function for processing the input image abd prediction
 def model_predict(img_path, model):
 
@@ -35,39 +42,25 @@ def model_predict(img_path, model):
 
     y = model.predict(x)
 
-    return np.argmax(y)
+    return preds[np.argmax(y)]
 
 
-@app.route('/', methods=['GET'])
-def index():
-    # Main page
-    return render_template('index.html')
 
-
-@app.route('/predict', methods=['GET', 'POST'])
+@app.route('/predict', methods=['POST'])
 def predict():
-    if request.method == 'POST':
-        # Get the file from post request
-        f = request.files['file']
-
+    if 'file' not in request.files:
+        return "No file part"
+    f = request.files['file']
+    if f.filename == '':
+        return "No selected file"
+    if f:
         # Save the file to ./uploads
         basepath = os.path.dirname(__file__)
-        file_path = os.path.join(
-            basepath, 'uploads', secure_filename(f.filename))
+        file_path = os.path.join(basepath, app.config['UPLOAD_FOLDER'], secure_filename(f.filename))
         f.save(file_path)
-
         # Make prediction
         preds = model_predict(file_path, model)
-        
-
-        # Process your result for human
-        dic= {0:"MildDemented", 1:"ModerateDemented" , 2:"VeryMildDemented" , 3:"NonDemented"}
-        # pred_class = preds.argmax(axis=-1)            # Simple argmax
-        pred_class = dic[preds]   # ImageNet Decode
-        # return the result
-        return pred_class
-    return None
-
+        return preds  # Make sure to return the prediction result
 
 if __name__ == '__main__':
     app.run(debug=True)
